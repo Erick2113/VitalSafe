@@ -48,7 +48,7 @@ fun HistoryScreen(
                 .padding(paddingValues)
                 .background(Color(0xFFF5F5F5))
         ) {
-            // Barra de búsqueda: filtra por tipo, fecha o ubicación
+
             OutlinedTextField(
                 value = state.searchQuery,
                 onValueChange = { viewModel.updateSearchQuery(it) },
@@ -82,7 +82,7 @@ fun HistoryScreen(
                     )
                 }
 
-                // Lista dinámica de tickets
+
                 else -> LazyColumn(
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -96,7 +96,7 @@ fun HistoryScreen(
     }
 }
 
-// Componente reutilizable para cada tarjeta de la lista
+
 @Composable
 fun EmergencyCard(item: EmergencyItem) {
     Card(

@@ -136,7 +136,7 @@ fun AddContactForm(viewModel: ContactViewModel) {
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Fila superior con botón para regresar a la lista
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically

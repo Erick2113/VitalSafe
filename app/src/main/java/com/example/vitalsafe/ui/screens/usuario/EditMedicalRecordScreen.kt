@@ -26,7 +26,7 @@ fun EditMedicalRecordScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
 
-    // Variable para forzar el color de todos los campos a negro
+
     val blackTextFieldColors = OutlinedTextFieldDefaults.colors(
         focusedTextColor = Color.Black,
         unfocusedTextColor = Color.Black,
@@ -36,7 +36,7 @@ fun EditMedicalRecordScreen(
         unfocusedLabelColor = Color.Gray
     )
 
-    // Animación suave e interactiva para la barra
+
     val animatedProgress by animateFloatAsState(
         targetValue = state.progress,
         label = "progressAnimation"

@@ -47,7 +47,7 @@ fun CompleteProfileScreen(
 
     val context = LocalContext.current
     val sharedPreferences = remember { context.getSharedPreferences("VitalSafePrefs", Context.MODE_PRIVATE) }
-    // Leemos en tiempo real si el interruptor de seguridad está activado
+    // Leemos si el interruptor de seguridad está activado
     val isBiometricEnabled = sharedPreferences.getBoolean("use_biometrics", false)
 
     Scaffold(
@@ -136,7 +136,7 @@ fun CompleteProfileScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Button(
-                    // LÓGICA DE SEGURIDAD 1: Botón del Expediente Médico
+                    // Botón del Expediente Médico
                     onClick = {
                         if (isBiometricEnabled) {
                             authenticateToEdit(context, onSuccess = onEditMedicalRecord)
@@ -288,7 +288,7 @@ fun SettingsRow(icon: androidx.compose.ui.graphics.vector.ImageVector, title: St
     }
 }
 
-// MOTOR DE SEGURIDAD PARA EDICIÓN DE DATOS
+
 fun authenticateToEdit(context: Context, onSuccess: () -> Unit) {
     val fragmentActivity = context as? FragmentActivity
     if (fragmentActivity == null) {
@@ -325,7 +325,7 @@ fun authenticateToEdit(context: Context, onSuccess: () -> Unit) {
 
         biometricPrompt.authenticate(promptInfo)
     } else {
-        // En caso extremo de que el usuario haya borrado su PIN desde los ajustes del teléfono
+
         Toast.makeText(context, "Tu teléfono no tiene seguridad configurada.", Toast.LENGTH_LONG).show()
     }
 }

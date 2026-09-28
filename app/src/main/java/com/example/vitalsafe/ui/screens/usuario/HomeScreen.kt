@@ -44,7 +44,7 @@ fun HomeScreen(
     var hasBackgroundPermission by remember { mutableStateOf(LocationTracker.hasBackgroundPermission(context)) }
     val cameraPositionState = rememberCameraPositionState()
 
-    // Variable para controlar el cuadro de advertencia de SOS
+
     var showSOSDialog by remember { mutableStateOf(false) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -55,13 +55,13 @@ fun HomeScreen(
         }
     )
 
-    // El permiso "Permitir todo el tiempo" debe pedirse aparte, después del de ubicación normal
+
     val backgroundPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = { hasBackgroundPermission = LocationTracker.hasBackgroundPermission(context) }
     )
 
-    // Solo revisamos permisos aquí
+
     LaunchedEffect(Unit) {
         if (!hasLocationPermission) {
             val permissions = mutableListOf(
@@ -76,7 +76,7 @@ fun HomeScreen(
         }
     }
 
-    // Con permiso concedido: arranca el rastreo continuo y pide una primera ubicación rápida para el mapa
+
     LaunchedEffect(hasLocationPermission) {
         if (hasLocationPermission) {
             LocationTrackingService.start(context)
@@ -89,7 +89,7 @@ fun HomeScreen(
         }
     }
 
-    // El motor del zoom: sigue al usuario cada vez que llega una nueva coordenada
+
     val loc by viewModel.currentLocation.collectAsState()
     var hasCenteredMap by remember { mutableStateOf(false) }
     LaunchedEffect(loc) {
@@ -97,17 +97,17 @@ fun HomeScreen(
         val latLng = LatLng(current.latitude, current.longitude)
         if (!hasCenteredMap) {
             cameraPositionState.animate(
-                update = CameraUpdateFactory.newLatLngZoom(latLng, 17f), // Nivel 17: Zoom perfecto a nivel de calle
+                update = CameraUpdateFactory.newLatLngZoom(latLng, 17f),
                 durationMs = 1500
             )
             hasCenteredMap = true
         } else {
-            // Después del primer zoom se respeta el nivel que haya elegido el usuario
+
             cameraPositionState.animate(CameraUpdateFactory.newLatLng(latLng), durationMs = 800)
         }
     }
 
-    // Cuadro flotante de confirmación SOS
+
     if (showSOSDialog) {
         AlertDialog(
             onDismissRequest = { showSOSDialog = false },
@@ -121,7 +121,7 @@ fun HomeScreen(
                 TextButton(
                     onClick = {
                         showSOSDialog = false
-                        viewModel.triggerSOS() // Ejecuta el envío real a Firebase
+                        viewModel.triggerSOS()
                     }
                 ) {
                     Text("SÍ, ENVIAR SOS", color = Color.Red, fontWeight = FontWeight.Bold)
@@ -142,7 +142,7 @@ fun HomeScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
-            // Al hacer clic, mostramos el cuadro en vez de mandar la alerta de golpe
+
             onClick = { showSOSDialog = true },
             enabled = !viewModel.isSending,
             modifier = Modifier.size(180.dp),
