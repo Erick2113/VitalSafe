@@ -10,5 +10,7 @@ data class EmergencyItem(
 
 data class HistoryUiState(
     val emergencies: List<EmergencyItem> = emptyList(),
-    val isLoading: Boolean = false
+    val searchQuery: String = "",
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null
 )

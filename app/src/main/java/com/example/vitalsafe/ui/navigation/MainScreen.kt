@@ -30,7 +30,7 @@ import com.example.vitalsafe.ui.viewmodel.EditPersonalDataViewModel
 import com.example.vitalsafe.ui.viewmodel.ContactViewModel // Nuevo ViewModel
 
 @Composable
-fun MainScreen() {
+fun MainScreen(onLogout: () -> Unit) {
     val navController = rememberNavController()
 
     Scaffold(
@@ -68,7 +68,8 @@ fun MainScreen() {
                     onNavigateBack = { navController.popBackStack() },
                     onProfileSaved = { navController.navigate(BottomNavItem.Home.route) },
                     onEditMedicalRecord = { navController.navigate("edit_medical_record") },
-                    onEditPersonalData = { navController.navigate("edit_personal_data") }
+                    onEditPersonalData = { navController.navigate("edit_personal_data") },
+                    onLogout = onLogout
                 )
             }
             composable("edit_medical_record") {

@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
@@ -13,6 +14,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 
 // Importaciones de tus pantallas y ViewModel
+import com.example.vitalsafe.location.LocationTrackingService
 import com.example.vitalsafe.ui.navigation.MainScreen
 import com.example.vitalsafe.ui.screens.LoginScreen
 import com.example.vitalsafe.ui.theme.VitalSafeTheme
@@ -31,8 +33,12 @@ class MainActivity : ComponentActivity() {
                     val rootNavController = rememberNavController()
                     val authViewModel: AuthViewModel = viewModel()
 
-                    // Iniciamos el NavHost maestro indicando que arranque en "login"
-                    NavHost(navController = rootNavController, startDestination = "login") {
+                    // Si ya había una sesión abierta, se entra directo a la app
+                    val startDestination = remember {
+                        if (authViewModel.isLoggedIn) "main_screen" else "login"
+                    }
+
+                    NavHost(navController = rootNavController, startDestination = startDestination) {
 
                         composable("login") {
                             LoginScreen(
@@ -51,7 +57,16 @@ class MainActivity : ComponentActivity() {
 
                         composable("main_screen") {
                             // Aquí cargamos toda la barra de navegación y pantallas que ya hicimos
-                            MainScreen()
+                            MainScreen(
+                                onLogout = {
+                                    // Se detiene el rastreo antes de cerrar la sesión
+                                    LocationTrackingService.stop(this@MainActivity)
+                                    authViewModel.logout()
+                                    rootNavController.navigate("login") {
+                                        popUpTo("main_screen") { inclusive = true }
+                                    }
+                                }
+                            )
                         }
 
                     }

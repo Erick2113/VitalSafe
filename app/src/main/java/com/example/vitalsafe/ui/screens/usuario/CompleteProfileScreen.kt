@@ -11,6 +11,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -27,9 +29,11 @@ fun CompleteProfileScreen(
     onNavigateBack: () -> Unit,
     onProfileSaved: () -> Unit,
     onEditMedicalRecord: () -> Unit,
-    onEditPersonalData: () -> Unit // <-- Añadimos el nuevo puente aquí
+    onEditPersonalData: () -> Unit, // <-- Añadimos el nuevo puente aquí
+    onLogout: () -> Unit
 ) {
-    val onLogout = { /* Lógica de cerrar sesión */ }
+    val state by viewModel.uiState.collectAsState()
+    val notRegistered = "Sin registrar"
 
     Scaffold(
         topBar = {
@@ -59,6 +63,13 @@ fun CompleteProfileScreen(
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            if (state.isLoading) {
+                LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), color = Color(0xFF00ACC1))
+            }
+            state.errorMessage?.let { message ->
+                Text(message, color = Color.Red, fontSize = 13.sp, modifier = Modifier.padding(16.dp))
+            }
+
             Spacer(modifier = Modifier.height(24.dp))
 
             Box(
@@ -68,10 +79,10 @@ fun CompleteProfileScreen(
                     .background(Color(0xFFE9ECEF)),
                 contentAlignment = Alignment.Center
             ) {
-                Text("JR", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1E3A8A))
+                Text(state.initials, fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1E3A8A))
             }
             Spacer(modifier = Modifier.height(12.dp))
-            Text("Juan Rodríguez", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1E3A8A))
+            Text(state.fullName.ifBlank { "Completa tu perfil" }, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1E3A8A))
             Text("CIUDADANO", fontSize = 12.sp, color = Color.Gray, fontWeight = FontWeight.SemiBold)
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -91,7 +102,7 @@ fun CompleteProfileScreen(
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text("TIPO DE SANGRE", fontSize = 10.sp, color = Color.Gray, fontWeight = FontWeight.Bold)
-                        Text("A+ (REPOSITOR GENERAL)", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFFDC3545))
+                        Text(state.bloodType.ifBlank { notRegistered }, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFFDC3545))
                     }
                 }
             }
@@ -102,10 +113,10 @@ fun CompleteProfileScreen(
                 Text("INFORMACIÓN MÉDICA", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1E3A8A))
                 Spacer(modifier = Modifier.height(12.dp))
 
-                MedicalItemCard("ALERGIAS", "Penicilina, Mariscos", Color(0xFFFFC107), Icons.Default.Warning)
-                MedicalItemCard("PADECIMIENTOS", "Hipertensión", Color(0xFF0D6EFD), Icons.Default.AddCircle)
-                MedicalItemCard("MEDICAMENTOS", "Losartán 50mg", Color(0xFF198754), Icons.Default.CheckCircle)
-                MedicalItemCard("CONTACTO DE EMERGENCIA", "Elías Rodriguez - 7890-1234", Color(0xFFFD7E14), Icons.Default.Phone)
+                MedicalItemCard("ALERGIAS", state.allergies.ifBlank { notRegistered }, Color(0xFFFFC107), Icons.Default.Warning)
+                MedicalItemCard("PADECIMIENTOS", state.conditions.ifBlank { notRegistered }, Color(0xFF0D6EFD), Icons.Default.AddCircle)
+                MedicalItemCard("MEDICAMENTOS", state.currentMedications.ifBlank { notRegistered }, Color(0xFF198754), Icons.Default.CheckCircle)
+                MedicalItemCard("CONTACTO DE EMERGENCIA", state.emergencyContact.ifBlank { notRegistered }, Color(0xFFFD7E14), Icons.Default.Phone)
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -145,10 +156,10 @@ fun CompleteProfileScreen(
                         }
                     }
                     Spacer(modifier = Modifier.height(16.dp))
-                    ProfileDataRow(Icons.Default.Person, "Nombre completo", "Juan Rodriguez")
-                    ProfileDataRow(Icons.Default.Phone, "Teléfono", "6458 9158")
-                    ProfileDataRow(Icons.Default.LocationOn, "Dirección", "Col. San Rafael casa 25")
-                    ProfileDataRow(Icons.Default.Email, "Correo electrónico", "Juan@gmail.com")
+                    ProfileDataRow(Icons.Default.Person, "Nombre completo", state.fullName.ifBlank { notRegistered })
+                    ProfileDataRow(Icons.Default.Phone, "Teléfono", state.phone.ifBlank { notRegistered })
+                    ProfileDataRow(Icons.Default.LocationOn, "Dirección", state.address.ifBlank { notRegistered })
+                    ProfileDataRow(Icons.Default.Email, "Correo electrónico", state.email.ifBlank { notRegistered })
                 }
             }
 

@@ -48,10 +48,11 @@ fun HistoryScreen(
                 .padding(paddingValues)
                 .background(Color(0xFFF5F5F5))
         ) {
-            // Barra de búsqueda simulada del diseño
+            // Barra de búsqueda: filtra por tipo, fecha o ubicación
             OutlinedTextField(
-                value = "",
-                onValueChange = {},
+                value = state.searchQuery,
+                onValueChange = { viewModel.updateSearchQuery(it) },
+                singleLine = true,
                 placeholder = { Text("Buscar por tipo de emergencia o f...") },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Buscar") },
                 modifier = Modifier
@@ -64,13 +65,31 @@ fun HistoryScreen(
                 )
             )
 
-            // Lista dinámica de tickets
-            LazyColumn(
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(state.emergencies) { emergency ->
-                    EmergencyCard(emergency)
+            state.errorMessage?.let { message ->
+                Text(message, color = Color.Red, fontSize = 14.sp, modifier = Modifier.padding(horizontal = 16.dp))
+            }
+
+            when {
+                state.isLoading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = Color(0xFF1E3A8A))
+                }
+
+                state.emergencies.isEmpty() -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(
+                        text = if (state.searchQuery.isBlank()) "Aún no has enviado alertas SOS."
+                        else "No hay resultados para tu búsqueda.",
+                        color = Color.Gray
+                    )
+                }
+
+                // Lista dinámica de tickets
+                else -> LazyColumn(
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(state.emergencies) { emergency ->
+                        EmergencyCard(emergency)
+                    }
                 }
             }
         }

@@ -18,6 +18,9 @@ class AuthViewModel : ViewModel() {
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
     val authState = _authState.asStateFlow()
 
+    val isLoggedIn: Boolean
+        get() = auth.currentUser != null
+
     // Mantiene la sesión abierta si el usuario ya se había logueado antes
     fun checkCurrentUser() {
         if (auth.currentUser != null) {
@@ -33,7 +36,7 @@ class AuthViewModel : ViewModel() {
 
         _authState.value = AuthState.Loading
 
-        auth.signInWithEmailAndPassword(email, pass)
+        auth.signInWithEmailAndPassword(email.trim(), pass)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     _authState.value = AuthState.Success
@@ -41,5 +44,11 @@ class AuthViewModel : ViewModel() {
                     _authState.value = AuthState.Error(task.exception?.message ?: "Error al iniciar sesión")
                 }
             }
+    }
+
+    // Se regresa a Idle para que el login no navegue solo al volver a mostrarse
+    fun logout() {
+        auth.signOut()
+        _authState.value = AuthState.Idle
     }
 }

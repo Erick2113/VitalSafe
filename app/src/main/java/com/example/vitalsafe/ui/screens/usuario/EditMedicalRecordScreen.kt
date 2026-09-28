@@ -53,6 +53,11 @@ fun EditMedicalRecordScreen(
                 .padding(24.dp)
                 .verticalScroll(rememberScrollState())
         ) {
+            if (state.isLoading) {
+                LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), color = Color(0xFF1E3A8A))
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
             Text("Progreso de tu expediente", fontWeight = FontWeight.Bold, color = Color.Gray)
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -78,6 +83,7 @@ fun EditMedicalRecordScreen(
 
             OutlinedTextField(
                 value = state.bloodType,
+                enabled = !state.isLoading && !state.isSaving,
                 onValueChange = { viewModel.updateField("blood", it) },
                 label = { Text("Tipo de Sangre") },
                 placeholder = { Text("Ej: O+, A-") },
@@ -88,6 +94,7 @@ fun EditMedicalRecordScreen(
 
             OutlinedTextField(
                 value = state.allergies,
+                enabled = !state.isLoading && !state.isSaving,
                 onValueChange = { viewModel.updateField("allergies", it) },
                 label = { Text("Alergias") },
                 placeholder = { Text("Ej: Penicilina, Ninguna") },
@@ -98,6 +105,7 @@ fun EditMedicalRecordScreen(
 
             OutlinedTextField(
                 value = state.conditions,
+                enabled = !state.isLoading && !state.isSaving,
                 onValueChange = { viewModel.updateField("conditions", it) },
                 label = { Text("Padecimientos Crónicos") },
                 placeholder = { Text("Ej: Asma, Diabetes") },
@@ -108,6 +116,7 @@ fun EditMedicalRecordScreen(
 
             OutlinedTextField(
                 value = state.medications,
+                enabled = !state.isLoading && !state.isSaving,
                 onValueChange = { viewModel.updateField("medications", it) },
                 label = { Text("Medicamentos Actuales") },
                 placeholder = { Text("Ej: Salbutamol") },
@@ -115,17 +124,27 @@ fun EditMedicalRecordScreen(
                 shape = RoundedCornerShape(12.dp)
             )
 
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(32.dp))
+
+            state.errorMessage?.let { message ->
+                Text(text = message, color = Color.Red, fontSize = 14.sp)
+                Spacer(modifier = Modifier.height(16.dp))
+            }
 
             Button(
-                onClick = onNavigateBack, // A futuro guardará en Firebase
+                onClick = { viewModel.saveRecord(onSaved = onNavigateBack) },
+                enabled = !state.isLoading && !state.isSaving,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E3A8A)),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text("GUARDAR EXPEDIENTE", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                if (state.isSaving) {
+                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                } else {
+                    Text("GUARDAR EXPEDIENTE", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                }
             }
         }
     }

@@ -2,7 +2,7 @@ package com.example.vitalsafe.ui.screens.usuario
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.pm.PackageManager
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
@@ -18,7 +18,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat
+import com.example.vitalsafe.location.LocationTracker
+import com.example.vitalsafe.location.LocationTrackingService
 import com.example.vitalsafe.ui.viewmodel.HomeViewModel
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
@@ -39,7 +40,8 @@ fun HomeScreen(
     val context = LocalContext.current
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
 
-    var hasLocationPermission by remember { mutableStateOf(false) }
+    var hasLocationPermission by remember { mutableStateOf(LocationTracker.hasLocationPermission(context)) }
+    var hasBackgroundPermission by remember { mutableStateOf(LocationTracker.hasBackgroundPermission(context)) }
     val cameraPositionState = rememberCameraPositionState()
 
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -50,22 +52,31 @@ fun HomeScreen(
         }
     )
 
+    // El permiso "Permitir todo el tiempo" debe pedirse aparte, después del de ubicación normal
+    val backgroundPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { hasBackgroundPermission = LocationTracker.hasBackgroundPermission(context) }
+    )
+
     // Solo revisamos permisos aquí
     LaunchedEffect(Unit) {
-        hasLocationPermission = ContextCompat.checkSelfPermission(
-            context, Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-
         if (!hasLocationPermission) {
-            permissionLauncher.launch(
-                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
+            val permissions = mutableListOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
             )
+            // Android 13+ necesita permiso para mostrar la notificación del rastreo
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                permissions += Manifest.permission.POST_NOTIFICATIONS
+            }
+            permissionLauncher.launch(permissions.toTypedArray())
         }
     }
 
-    // EL TRUCO: Apenas el sistema sepa que tiene permisos, fuerza al satélite a buscar tu ubicación real
+    // Con permiso concedido: arranca el rastreo continuo y pide una primera ubicación rápida para el mapa
     LaunchedEffect(hasLocationPermission) {
         if (hasLocationPermission) {
+            LocationTrackingService.start(context)
             fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, CancellationTokenSource().token)
                 .addOnSuccessListener { location ->
                     if (location != null) {
@@ -75,15 +86,21 @@ fun HomeScreen(
         }
     }
 
-    // El motor del zoom
-    val loc = viewModel.currentLocation
+    // El motor del zoom: sigue al usuario cada vez que llega una nueva coordenada
+    val loc by viewModel.currentLocation.collectAsState()
+    var hasCenteredMap by remember { mutableStateOf(false) }
     LaunchedEffect(loc) {
-        if (loc != null) {
-            val latLng = LatLng(loc.latitude, loc.longitude)
+        val current = loc ?: return@LaunchedEffect
+        val latLng = LatLng(current.latitude, current.longitude)
+        if (!hasCenteredMap) {
             cameraPositionState.animate(
                 update = CameraUpdateFactory.newLatLngZoom(latLng, 17f), // Nivel 17: Zoom perfecto a nivel de calle
                 durationMs = 1500
             )
+            hasCenteredMap = true
+        } else {
+            // Después del primer zoom se respeta el nivel que haya elegido el usuario
+            cameraPositionState.animate(CameraUpdateFactory.newLatLng(latLng), durationMs = 800)
         }
     }
 
@@ -94,28 +111,47 @@ fun HomeScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
-            onClick = {
-                if (hasLocationPermission) {
-                    fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, CancellationTokenSource().token)
-                        .addOnSuccessListener { location ->
-                            if (location != null) {
-                                viewModel.updateLocation(location)
-                                viewModel.triggerSOS()
-                            }
-                        }
-                }
-            },
+            onClick = { viewModel.triggerSOS() },
+            enabled = !viewModel.isSending,
             modifier = Modifier.size(180.dp),
             shape = CircleShape,
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800)),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFFFF9800),
+                disabledContainerColor = Color(0xFFFFCC80)
+            ),
             elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
         ) {
-            Text("SOS", fontSize = 48.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            if (viewModel.isSending) {
+                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(48.dp))
+            } else {
+                Text("SOS", fontSize = 48.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            }
         }
 
         Spacer(modifier = Modifier.height(24.dp))
         Text(text = viewModel.sosStatus, color = Color.Gray, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(16.dp))
+
+        if (hasLocationPermission && !hasBackgroundPermission && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3CD))
+            ) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Text(
+                        "Para compartir tu ubicación con la app cerrada, elige \"Permitir todo el tiempo\".",
+                        color = Color(0xFF856404),
+                        fontSize = 13.sp
+                    )
+                    TextButton(
+                        onClick = { backgroundPermissionLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION) }
+                    ) {
+                        Text("PERMITIR", color = Color(0xFF1E3A8A), fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+        }
 
         if (hasLocationPermission) {
             Box(

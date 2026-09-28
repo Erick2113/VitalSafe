@@ -23,7 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.vitalsafe.ui.viewmodel.ContactPayload
+import com.example.vitalsafe.data.ContactPayload
 import com.example.vitalsafe.ui.viewmodel.ContactViewModel
 
 @Composable
@@ -72,6 +72,11 @@ fun ContactListSection(viewModel: ContactViewModel) {
             )
             Spacer(modifier = Modifier.height(24.dp))
 
+            if (viewModel.loadError.isNotEmpty()) {
+                Text(text = viewModel.loadError, color = Color.Red, fontSize = 14.sp)
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
             if (viewModel.contactList.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(
@@ -82,7 +87,7 @@ fun ContactListSection(viewModel: ContactViewModel) {
                 }
             } else {
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    items(viewModel.contactList) { contact ->
+                    items(viewModel.contactList, key = { it.id }) { contact ->
                         ContactItemCard(contact)
                     }
                 }
@@ -200,13 +205,18 @@ fun AddContactForm(viewModel: ContactViewModel) {
 
         Button(
             onClick = { viewModel.saveContact() },
+            enabled = !viewModel.isSaving,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(55.dp),
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E3A8A))
         ) {
-            Text("GUARDAR", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            if (viewModel.isSaving) {
+                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+            } else {
+                Text("GUARDAR", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            }
         }
     }
 }
