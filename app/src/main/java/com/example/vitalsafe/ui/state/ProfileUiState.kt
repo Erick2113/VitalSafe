@@ -10,6 +10,7 @@ data class ProfileUiState(
     val conditions: String = "", // Padecimientos
     val currentMedications: String = "", // Medicamentos actuales
     val emergencyContact: String = "", // Primer contacto registrado
+    val dui: String = "",
     val isLoading: Boolean = true,
     val errorMessage: String? = null
 ) {

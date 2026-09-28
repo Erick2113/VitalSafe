@@ -37,6 +37,7 @@ class ProfileViewModel : ViewModel() {
                             allergies = profile.allergies,
                             conditions = profile.conditions,
                             currentMedications = profile.medications,
+                            dui = profile.dui,
                             isLoading = false,
                             errorMessage = null
                         )

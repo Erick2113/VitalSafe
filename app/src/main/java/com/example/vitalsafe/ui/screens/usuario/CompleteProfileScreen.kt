@@ -1,7 +1,12 @@
 package com.example.vitalsafe.ui.screens.usuario
 
+import android.content.Context
+import android.widget.Toast
+import androidx.biometric.BiometricManager
+import androidx.biometric.BiometricPrompt
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -13,13 +18,17 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.FragmentActivity
 import com.example.vitalsafe.ui.viewmodel.ProfileViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -29,11 +38,17 @@ fun CompleteProfileScreen(
     onNavigateBack: () -> Unit,
     onProfileSaved: () -> Unit,
     onEditMedicalRecord: () -> Unit,
-    onEditPersonalData: () -> Unit, // <-- Añadimos el nuevo puente aquí
+    onEditPersonalData: () -> Unit,
+    onNavigateToSecurity: () -> Unit,
     onLogout: () -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
     val notRegistered = "Sin registrar"
+
+    val context = LocalContext.current
+    val sharedPreferences = remember { context.getSharedPreferences("VitalSafePrefs", Context.MODE_PRIVATE) }
+    // Leemos en tiempo real si el interruptor de seguridad está activado
+    val isBiometricEnabled = sharedPreferences.getBoolean("use_biometrics", false)
 
     Scaffold(
         topBar = {
@@ -83,7 +98,7 @@ fun CompleteProfileScreen(
             }
             Spacer(modifier = Modifier.height(12.dp))
             Text(state.fullName.ifBlank { "Completa tu perfil" }, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1E3A8A))
-            Text("CIUDADANO", fontSize = 12.sp, color = Color.Gray, fontWeight = FontWeight.SemiBold)
+            Text("CIUDADANO", fontSize = 12.sp, color = Color.DarkGray, fontWeight = FontWeight.SemiBold)
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -101,7 +116,7 @@ fun CompleteProfileScreen(
                     Icon(Icons.Default.Info, contentDescription = "Sangre", tint = Color(0xFFDC3545))
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
-                        Text("TIPO DE SANGRE", fontSize = 10.sp, color = Color.Gray, fontWeight = FontWeight.Bold)
+                        Text("TIPO DE SANGRE", fontSize = 10.sp, color = Color.DarkGray, fontWeight = FontWeight.Bold)
                         Text(state.bloodType.ifBlank { notRegistered }, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFFDC3545))
                     }
                 }
@@ -121,14 +136,21 @@ fun CompleteProfileScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Button(
-                    onClick = onEditMedicalRecord,
+                    // LÓGICA DE SEGURIDAD 1: Botón del Expediente Médico
+                    onClick = {
+                        if (isBiometricEnabled) {
+                            authenticateToEdit(context, onSuccess = onEditMedicalRecord)
+                        } else {
+                            onEditMedicalRecord()
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00ACC1)),
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Actualizar Expediente Médico", fontWeight = FontWeight.Bold)
+                    Text("Actualizar Expediente Médico", fontWeight = FontWeight.Bold, color = Color.White)
                 }
             }
 
@@ -148,11 +170,20 @@ fun CompleteProfileScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.Person, contentDescription = "Datos", tint = Color(0xFF198754))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Mis datos", fontWeight = FontWeight.Bold)
+                            Text("Mis datos", fontWeight = FontWeight.Bold, color = Color.Black)
                         }
-                        // Lápiz interactivo conectado
-                        IconButton(onClick = onEditPersonalData, modifier = Modifier.size(24.dp)) {
-                            Icon(Icons.Default.Edit, contentDescription = "Editar datos", tint = Color.Gray)
+                        // LÓGICA DE SEGURIDAD 2: Lapicito de Datos Personales
+                        IconButton(
+                            onClick = {
+                                if (isBiometricEnabled) {
+                                    authenticateToEdit(context, onSuccess = onEditPersonalData)
+                                } else {
+                                    onEditPersonalData()
+                                }
+                            },
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(Icons.Default.Edit, contentDescription = "Editar datos", tint = Color.DarkGray)
                         }
                     }
                     Spacer(modifier = Modifier.height(16.dp))
@@ -174,11 +205,11 @@ fun CompleteProfileScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.Settings, contentDescription = "Config", tint = Color(0xFF00ACC1))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Configuración y seguridad", fontWeight = FontWeight.Bold)
+                        Text("Configuración y seguridad", fontWeight = FontWeight.Bold, color = Color.Black)
                     }
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     SettingsRow(Icons.Default.Person, "Configuración de la cuenta")
-                    SettingsRow(Icons.Default.Lock, "Seguridad")
+                    SettingsRow(Icons.Default.Lock, "Seguridad", onClick = onNavigateToSecurity)
                     SettingsRow(Icons.Default.Info, "Centro de ayuda")
                 }
             }
@@ -192,7 +223,7 @@ fun CompleteProfileScreen(
                 border = BorderStroke(1.dp, Color(0xFFDC3545)),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text("CERRAR SESIÓN", fontWeight = FontWeight.Bold)
+                Text("CERRAR SESIÓN", fontWeight = FontWeight.Bold, color = Color(0xFFDC3545))
             }
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -213,7 +244,7 @@ fun MedicalItemCard(title: String, value: String, stripeColor: Color, icon: andr
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(icon, contentDescription = null, tint = stripeColor, modifier = Modifier.size(12.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(title, fontSize = 10.sp, color = Color.Gray, fontWeight = FontWeight.Bold)
+                    Text(title, fontSize = 10.sp, color = Color.DarkGray, fontWeight = FontWeight.Bold)
                 }
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(value, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Color.Black)
@@ -230,16 +261,19 @@ fun ProfileDataRow(icon: androidx.compose.ui.graphics.vector.ImageVector, label:
         }
         Spacer(modifier = Modifier.width(12.dp))
         Column {
-            Text(label, fontSize = 10.sp, color = Color.Gray)
-            Text(value, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+            Text(label, fontSize = 10.sp, color = Color(0xFF555555))
+            Text(value, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Color.Black)
         }
     }
 }
 
 @Composable
-fun SettingsRow(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String) {
+fun SettingsRow(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, onClick: () -> Unit = {}) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -248,8 +282,50 @@ fun SettingsRow(icon: androidx.compose.ui.graphics.vector.ImageVector, title: St
                 Icon(icon, contentDescription = null, tint = Color(0xFF00ACC1), modifier = Modifier.size(16.dp))
             }
             Spacer(modifier = Modifier.width(12.dp))
-            Text(title, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+            Text(title, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Color.Black)
         }
-        Icon(Icons.Default.ArrowForward, contentDescription = "Ir", tint = Color.Gray)
+        Icon(Icons.Default.ArrowForward, contentDescription = "Ir", tint = Color.DarkGray)
+    }
+}
+
+// MOTOR DE SEGURIDAD PARA EDICIÓN DE DATOS
+fun authenticateToEdit(context: Context, onSuccess: () -> Unit) {
+    val fragmentActivity = context as? FragmentActivity
+    if (fragmentActivity == null) {
+        Toast.makeText(context, "Error interno", Toast.LENGTH_SHORT).show()
+        return
+    }
+
+    val biometricManager = BiometricManager.from(context)
+    val authenticators = BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL
+
+    if (biometricManager.canAuthenticate(authenticators) == BiometricManager.BIOMETRIC_SUCCESS) {
+        val executor = ContextCompat.getMainExecutor(context)
+        val biometricPrompt = BiometricPrompt(
+            fragmentActivity,
+            executor,
+            object : BiometricPrompt.AuthenticationCallback() {
+                override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                    super.onAuthenticationSucceeded(result)
+                    onSuccess() // Si la huella es correcta, navega al formulario
+                }
+
+                override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                    super.onAuthenticationError(errorCode, errString)
+                    Toast.makeText(context, "Edición cancelada", Toast.LENGTH_SHORT).show()
+                }
+            }
+        )
+
+        val promptInfo = BiometricPrompt.PromptInfo.Builder()
+            .setTitle("Autenticación Requerida")
+            .setSubtitle("Verifica tu identidad para modificar tus datos sensibles")
+            .setAllowedAuthenticators(authenticators)
+            .build()
+
+        biometricPrompt.authenticate(promptInfo)
+    } else {
+        // En caso extremo de que el usuario haya borrado su PIN desde los ajustes del teléfono
+        Toast.makeText(context, "Tu teléfono no tiene seguridad configurada.", Toast.LENGTH_LONG).show()
     }
 }

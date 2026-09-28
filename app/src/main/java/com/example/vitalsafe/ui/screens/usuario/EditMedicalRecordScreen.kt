@@ -26,6 +26,16 @@ fun EditMedicalRecordScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
 
+    // Variable para forzar el color de todos los campos a negro
+    val blackTextFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedTextColor = Color.Black,
+        unfocusedTextColor = Color.Black,
+        focusedBorderColor = Color(0xFF1E3A8A),
+        unfocusedBorderColor = Color.Gray,
+        focusedLabelColor = Color(0xFF1E3A8A),
+        unfocusedLabelColor = Color.Gray
+    )
+
     // Animación suave e interactiva para la barra
     val animatedProgress by animateFloatAsState(
         targetValue = state.progress,
@@ -41,7 +51,7 @@ fun EditMedicalRecordScreen(
                         Icon(Icons.Default.ArrowBack, contentDescription = "Regresar", tint = Color.White)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF1E3A8A)) // Azul VitalSafe
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF1E3A8A))
             )
         },
         containerColor = Color(0xFFF8F9FA)
@@ -67,7 +77,7 @@ fun EditMedicalRecordScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(10.dp),
-                color = Color(0xFF00ACC1), // Turquesa
+                color = Color(0xFF00ACC1),
                 trackColor = Color(0xFFE0E0E0)
             )
 
@@ -88,7 +98,8 @@ fun EditMedicalRecordScreen(
                 label = { Text("Tipo de Sangre") },
                 placeholder = { Text("Ej: O+, A-") },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                colors = blackTextFieldColors
             )
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -99,7 +110,8 @@ fun EditMedicalRecordScreen(
                 label = { Text("Alergias") },
                 placeholder = { Text("Ej: Penicilina, Ninguna") },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                colors = blackTextFieldColors
             )
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -110,7 +122,8 @@ fun EditMedicalRecordScreen(
                 label = { Text("Padecimientos Crónicos") },
                 placeholder = { Text("Ej: Asma, Diabetes") },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                colors = blackTextFieldColors
             )
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -121,7 +134,8 @@ fun EditMedicalRecordScreen(
                 label = { Text("Medicamentos Actuales") },
                 placeholder = { Text("Ej: Salbutamol") },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                colors = blackTextFieldColors
             )
 
             Spacer(modifier = Modifier.height(32.dp))

@@ -27,6 +27,15 @@ fun EditPersonalDataScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
 
+    val blackTextFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedTextColor = Color.Black,
+        unfocusedTextColor = Color.Black,
+        focusedBorderColor = Color(0xFF1E3A8A),
+        unfocusedBorderColor = Color.Gray,
+        focusedLabelColor = Color(0xFF1E3A8A),
+        unfocusedLabelColor = Color.Gray
+    )
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -62,7 +71,8 @@ fun EditPersonalDataScreen(
                 onValueChange = { viewModel.updateField("name", it) },
                 label = { Text("Nombre Completo") },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                colors = blackTextFieldColors
             )
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -73,7 +83,8 @@ fun EditPersonalDataScreen(
                 label = { Text("Teléfono") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                colors = blackTextFieldColors
             )
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -83,7 +94,8 @@ fun EditPersonalDataScreen(
                 onValueChange = { viewModel.updateField("address", it) },
                 label = { Text("Dirección") },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                colors = blackTextFieldColors
             )
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -94,7 +106,8 @@ fun EditPersonalDataScreen(
                 label = { Text("Correo Electrónico") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                colors = blackTextFieldColors
             )
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -105,10 +118,10 @@ fun EditPersonalDataScreen(
             }
 
             Button(
-                onClick = { viewModel.saveData(onSaved = onNavigateBack) }, // Guardar y regresar a perfil
+                onClick = { viewModel.saveData(onSaved = onNavigateBack) },
                 enabled = !state.isLoading && !state.isSaving,
                 modifier = Modifier.fillMaxWidth().height(50.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF198754)), // Verde
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF198754)),
                 shape = RoundedCornerShape(12.dp)
             ) {
                 if (state.isSaving) {

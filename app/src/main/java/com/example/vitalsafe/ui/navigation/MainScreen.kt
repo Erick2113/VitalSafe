@@ -20,14 +20,15 @@ import com.example.vitalsafe.ui.screens.usuario.HistoryScreen
 import com.example.vitalsafe.ui.screens.usuario.CompleteProfileScreen
 import com.example.vitalsafe.ui.screens.usuario.EditMedicalRecordScreen
 import com.example.vitalsafe.ui.screens.usuario.EditPersonalDataScreen
-import com.example.vitalsafe.ui.screens.usuario.ContactScreen // Nueva pantalla
+import com.example.vitalsafe.ui.screens.usuario.ContactScreen
+import com.example.vitalsafe.ui.screens.usuario.SecurityScreen // <-- NUEVA IMPORTACIÓN
 
 // Importaciones de ViewModels
 import com.example.vitalsafe.ui.viewmodel.HomeViewModel
 import com.example.vitalsafe.ui.viewmodel.HistoryViewModel
 import com.example.vitalsafe.ui.viewmodel.ProfileViewModel
 import com.example.vitalsafe.ui.viewmodel.EditPersonalDataViewModel
-import com.example.vitalsafe.ui.viewmodel.ContactViewModel // Nuevo ViewModel
+import com.example.vitalsafe.ui.viewmodel.ContactViewModel
 
 @Composable
 fun MainScreen(onLogout: () -> Unit) {
@@ -49,7 +50,6 @@ fun MainScreen(onLogout: () -> Unit) {
                 )
             }
 
-            // Reemplazamos el texto temporal por la pantalla real
             composable(BottomNavItem.AddContact.route) {
                 ContactScreen(
                     viewModel = viewModel()
@@ -62,6 +62,7 @@ fun MainScreen(onLogout: () -> Unit) {
                     onNavigateBack = { navController.popBackStack() }
                 )
             }
+
             composable(BottomNavItem.Profile.route) {
                 CompleteProfileScreen(
                     viewModel = viewModel(),
@@ -69,18 +70,28 @@ fun MainScreen(onLogout: () -> Unit) {
                     onProfileSaved = { navController.navigate(BottomNavItem.Home.route) },
                     onEditMedicalRecord = { navController.navigate("edit_medical_record") },
                     onEditPersonalData = { navController.navigate("edit_personal_data") },
+                    onNavigateToSecurity = { navController.navigate("security_settings") }, // <-- NUEVO PUENTE
                     onLogout = onLogout
                 )
             }
+
             composable("edit_medical_record") {
                 EditMedicalRecordScreen(
                     viewModel = viewModel(),
                     onNavigateBack = { navController.popBackStack() }
                 )
             }
+
             composable("edit_personal_data") {
                 EditPersonalDataScreen(
                     viewModel = viewModel(),
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+
+            // <-- NUEVA RUTA PARA LA PANTALLA DE SEGURIDAD
+            composable("security_settings") {
+                SecurityScreen(
                     onNavigateBack = { navController.popBackStack() }
                 )
             }

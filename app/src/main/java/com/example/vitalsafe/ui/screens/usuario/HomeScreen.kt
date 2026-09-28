@@ -44,6 +44,9 @@ fun HomeScreen(
     var hasBackgroundPermission by remember { mutableStateOf(LocationTracker.hasBackgroundPermission(context)) }
     val cameraPositionState = rememberCameraPositionState()
 
+    // Variable para controlar el cuadro de advertencia de SOS
+    var showSOSDialog by remember { mutableStateOf(false) }
+
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions(),
         onResult = { permissions ->
@@ -104,6 +107,34 @@ fun HomeScreen(
         }
     }
 
+    // Cuadro flotante de confirmación SOS
+    if (showSOSDialog) {
+        AlertDialog(
+            onDismissRequest = { showSOSDialog = false },
+            title = {
+                Text(text = "️ Confirmar Emergencia", fontWeight = FontWeight.Bold, color = Color(0xFFD32F2F))
+            },
+            text = {
+                Text(text = "¿Estás seguro de que necesitas ayuda? Se enviará tu ubicación exacta a tus contactos de emergencia y a la base de datos.")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showSOSDialog = false
+                        viewModel.triggerSOS() // Ejecuta el envío real a Firebase
+                    }
+                ) {
+                    Text("SÍ, ENVIAR SOS", color = Color.Red, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSOSDialog = false }) {
+                    Text("CANCELAR", color = Color.Gray)
+                }
+            }
+        )
+    }
+
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -111,7 +142,8 @@ fun HomeScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
-            onClick = { viewModel.triggerSOS() },
+            // Al hacer clic, mostramos el cuadro en vez de mandar la alerta de golpe
+            onClick = { showSOSDialog = true },
             enabled = !viewModel.isSending,
             modifier = Modifier.size(180.dp),
             shape = CircleShape,

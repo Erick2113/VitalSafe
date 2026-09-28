@@ -7,12 +7,7 @@ import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
 
-/**
- * Único punto de acceso a Firestore. Estructura:
- *   users/{uid}                  -> perfil, expediente médico y lastLocation
- *   users/{uid}/contacts/{id}    -> contactos de emergencia
- *   users/{uid}/emergencies/{id} -> alertas SOS enviadas
- */
+
 class UserRepository(
     private val db: FirebaseFirestore = FirebaseFirestore.getInstance()
 ) {
@@ -21,7 +16,7 @@ class UserRepository(
     private fun contacts(uid: String) = userDoc(uid).collection(CONTACTS)
     private fun emergencies(uid: String) = userDoc(uid).collection(EMERGENCIES)
 
-    // ---------- Perfil / expediente ----------
+
 
     fun getProfile(
         uid: String,
@@ -43,7 +38,7 @@ class UserRepository(
             else onChange(snapshot?.toUserProfile() ?: UserProfile())
         }
 
-    // merge: solo sobrescribe los campos enviados, no borra el resto del documento
+
     fun saveProfileFields(
         uid: String,
         fields: Map<String, Any>,
@@ -64,7 +59,7 @@ class UserRepository(
         userDoc(uid).set(mapOf("lastLocation" to lastLocation), SetOptions.merge())
     }
 
-    // ---------- Contactos ----------
+
 
     fun addContact(
         uid: String,
@@ -95,7 +90,7 @@ class UserRepository(
                 else onChange(snapshot?.documents?.map { it.toContact() }.orEmpty())
             }
 
-    // ---------- Emergencias ----------
+
 
     fun addEmergency(
         uid: String,
@@ -128,7 +123,7 @@ class UserRepository(
                 else onChange(snapshot?.documents?.map { it.toEmergency() }.orEmpty())
             }
 
-    // ---------- Mapeo manual (evita problemas de reflexión con data classes de Kotlin) ----------
+
 
     private fun DocumentSnapshot.str(field: String) = getString(field).orEmpty()
 
@@ -140,7 +135,9 @@ class UserRepository(
         bloodType = str("bloodType"),
         allergies = str("allergies"),
         conditions = str("conditions"),
-        medications = str("medications")
+        medications = str("medications"),
+        dui = str("dui"),
+        role = str("role")
     )
 
     private fun DocumentSnapshot.toContact() = ContactPayload(

@@ -9,7 +9,9 @@ data class UserProfile(
     val bloodType: String = "",
     val allergies: String = "",
     val conditions: String = "",
-    val medications: String = ""
+    val medications: String = "",
+    val dui: String = "",
+    val role: String = ""
 )
 
 // Documento de users/{uid}/contacts
