@@ -7,8 +7,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+
+// Importaciones de tus pantallas y ViewModel
 import com.example.vitalsafe.ui.navigation.MainScreen
-import com.example.vitalsafe.ui.theme.VitalSafeTheme // (El nombre de tu tema generado automáticamente)
+import com.example.vitalsafe.ui.screens.LoginScreen
+import com.example.vitalsafe.ui.theme.VitalSafeTheme
+import com.example.vitalsafe.ui.viewmodel.AuthViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,8 +27,34 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    // ¡Aquí inyectamos nuestra arquitectura completa!
-                    MainScreen()
+                    // Creamos un controlador de navegación maestro solo para el Login vs App
+                    val rootNavController = rememberNavController()
+                    val authViewModel: AuthViewModel = viewModel()
+
+                    // Iniciamos el NavHost maestro indicando que arranque en "login"
+                    NavHost(navController = rootNavController, startDestination = "login") {
+
+                        composable("login") {
+                            LoginScreen(
+                                viewModel = authViewModel,
+                                onLoginSuccess = {
+                                    // Viajamos a la app principal
+                                    rootNavController.navigate("main_screen") {
+                                        // Truco pro: Destruimos la pantalla de login del historial
+                                        // para que si el usuario presiona "Atrás", se salga de la app
+                                        // en vez de volver a ver el formulario de login.
+                                        popUpTo("login") { inclusive = true }
+                                    }
+                                }
+                            )
+                        }
+
+                        composable("main_screen") {
+                            // Aquí cargamos toda la barra de navegación y pantallas que ya hicimos
+                            MainScreen()
+                        }
+
+                    }
                 }
             }
         }

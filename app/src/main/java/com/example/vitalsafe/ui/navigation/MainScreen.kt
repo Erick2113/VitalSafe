@@ -14,16 +14,20 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.compose.ui.unit.dp
 
-// Importaciones
+// Importaciones de Pantallas
 import com.example.vitalsafe.ui.screens.usuario.HomeScreen
 import com.example.vitalsafe.ui.screens.usuario.HistoryScreen
 import com.example.vitalsafe.ui.screens.usuario.CompleteProfileScreen
 import com.example.vitalsafe.ui.screens.usuario.EditMedicalRecordScreen
-import com.example.vitalsafe.ui.screens.usuario.EditPersonalDataScreen // Nuevo Formulario
+import com.example.vitalsafe.ui.screens.usuario.EditPersonalDataScreen
+import com.example.vitalsafe.ui.screens.usuario.ContactScreen // Nueva pantalla
+
+// Importaciones de ViewModels
 import com.example.vitalsafe.ui.viewmodel.HomeViewModel
 import com.example.vitalsafe.ui.viewmodel.HistoryViewModel
 import com.example.vitalsafe.ui.viewmodel.ProfileViewModel
-import com.example.vitalsafe.ui.viewmodel.EditPersonalDataViewModel // Nuevo ViewModel
+import com.example.vitalsafe.ui.viewmodel.EditPersonalDataViewModel
+import com.example.vitalsafe.ui.viewmodel.ContactViewModel // Nuevo ViewModel
 
 @Composable
 fun MainScreen() {
@@ -44,12 +48,14 @@ fun MainScreen() {
                     onNavigateToProfile = { navController.navigate(BottomNavItem.Profile.route) }
                 )
             }
+
+            // Reemplazamos el texto temporal por la pantalla real
             composable(BottomNavItem.AddContact.route) {
-                Text(
-                    text = "Pantalla para Añadir Contacto en construcción",
-                    modifier = Modifier.padding(16.dp)
+                ContactScreen(
+                    viewModel = viewModel()
                 )
             }
+
             composable(BottomNavItem.History.route) {
                 HistoryScreen(
                     viewModel = viewModel(),
@@ -62,7 +68,7 @@ fun MainScreen() {
                     onNavigateBack = { navController.popBackStack() },
                     onProfileSaved = { navController.navigate(BottomNavItem.Home.route) },
                     onEditMedicalRecord = { navController.navigate("edit_medical_record") },
-                    onEditPersonalData = { navController.navigate("edit_personal_data") } // Conectado al lápiz
+                    onEditPersonalData = { navController.navigate("edit_personal_data") }
                 )
             }
             composable("edit_medical_record") {
@@ -71,7 +77,6 @@ fun MainScreen() {
                     onNavigateBack = { navController.popBackStack() }
                 )
             }
-            // Nueva ruta de navegación
             composable("edit_personal_data") {
                 EditPersonalDataScreen(
                     viewModel = viewModel(),
